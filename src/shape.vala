@@ -37,4 +37,17 @@ namespace Mu
 
 		return n;
 	}
+
+	public string print_shape(int[] shape)
+	{
+		string list = "";
+
+		for (int i = 0; i < shape.length; i++)
+		{
+			list += i.to_string();
+			list += (i != shape.length - 1) ? ", " : "";
+		}
+
+		return @"{$list}";
+	}
 }
