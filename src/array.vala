@@ -18,12 +18,12 @@ namespace Mu
 
 	public class Array : Object
 	{
-		public int[] shape { get; private set; }
-		public DType dtype { get; private set; }
+		public int[] shape { get; internal set; }
+		public DType dtype { get; internal set; }
 
-		private ByteArray bytes = new ByteArray();
+		internal ByteArray bytes = new ByteArray();
 
-		private Array(int[] shape, DType dtype)
+		internal Array(int[] shape, DType dtype)
 		{
 			this.shape = shape;	// shape is actually 2 arguments under the hood so we can't use Object(shape: ..., dtype: ...) unfortunately. :-(
 			this.dtype = dtype;
@@ -70,7 +70,7 @@ namespace Mu
 			return @"Mu.Array($repr)";
 		}
 
-		private static int PRINT_LIMIT = 20;
+		private static int PRINT_LIMIT = 2;
 
 		private static string dim_printer(uint8[] data, int start, int[] shape, int dim)
 		{
@@ -79,21 +79,27 @@ namespace Mu
 
 			string str = "";
 
-			for (int i = 0; i < dim_len; i++)
+			int limit = int.min(dim_len, PRINT_LIMIT + 1);
+			for (int i = 0; i < limit; i++)
 			{
 				if (dim == 1)
 				{
-					str += "%f".printf(((float[]) data)[start + i]);
-					str += (i == dim_len - 1) ? "" : ", ";
+					str += (i == PRINT_LIMIT) ? "..." : "%f".printf(((float[]) data)[start + i]);
+					str += (i == limit - 1) ? "" : ", ";
 				}
 				else if (dim > 1)
 				{
 					int skip = shape_length(shape[shape.length - dim + 1:]); 	// the number of items you need to skip to get to the next item in this dimension.
 
 					str += (i != 0) ? string.nfill((shape.length - dim) * 1, ' ') : "";
-					str += "[";
-					str += "%s]".printf(dim_printer(data, start + i*skip, shape, dim - 1));
-					str += (i == dim_len - 1) ? "" : (dim > 2) ? ",\n\n         " : ",\n         ";
+					if (i == PRINT_LIMIT)
+						str += "...";
+					else
+					{
+						str += "[";
+						str += "%s]".printf(dim_printer(data, start + i*skip, shape, dim - 1));
+					}
+					str += (i == limit - 1) ? "" : (dim > 2) ? ",\n\n         " : ",\n         ";
 				}
 			}
 
