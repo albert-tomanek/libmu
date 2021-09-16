@@ -139,14 +139,11 @@ namespace vt
 	 * int32 as G_TYPE_INT, so we have to define our own.
 	 */
 
-	public class _base {
-		static construct {
-			Quark.from_string("vt-size");	// Register a new quark (like a unique dictionary key)
-		}
+	public class base_ {
 	}
 
 	#define CASE(C)						\
-	public class C : _base {			\
+	public class C : base_ {			\
 		static construct {				\
 			int size = (int) sizeof(global::C);	\
 			typeof(C).set_qdata(Quark.try_string("vt-size"), (void*) size);		\
@@ -168,6 +165,8 @@ namespace vt
 
 void main ()
 {
+	message("%d", (int) Quark.from_string("vt-size"));
+	message("%p", typeof(vt.int16).get_qdata(Quark.from_string("vt-size")));
 	var a = vn.ones<vt.int16>({4});
 	message(@"$(a.data.data[0])");
 	var z = sizeof(bool);
