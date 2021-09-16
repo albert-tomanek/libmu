@@ -61,6 +61,34 @@ namespace Mu
 			return arr;
 		}
 
+		[CCode(sentinel = "-1")]
+		public float get(int i0, ...)
+		{
+			int[] index = parse_index(i0, va_list());
+
+			foreach(int i in index){
+				message("%d",i);
+			}
+
+			return 0;
+		}
+
+		int[] parse_index(int idx0, va_list rest)
+		{
+			var arr = new GLib.Array<int>();
+			arr.append_val(idx0);
+
+			while (true) {
+				int idx = rest.arg();
+				if (idx == -1) {
+					break;  // end of the list
+				}
+				arr.append_val(idx);
+			}
+
+			return arr.data;
+		}
+
 		// delegate string DepthIter(uint8[] data, int start_idx, int[] shape, int dimension);
 
 		public string to_string()
@@ -70,7 +98,7 @@ namespace Mu
 			return @"Mu.Array($repr)";
 		}
 
-		private static int PRINT_LIMIT = 2;
+		private static int PRINT_LIMIT = 20;
 
 		private static string dim_printer(uint8[] data, int start, int[] shape, int dim)
 		{
