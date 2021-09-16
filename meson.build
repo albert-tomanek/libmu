@@ -1,10 +1,12 @@
 project('libmu', 'vala', 'c')
 
 lib = library('mu',
+	version: '0.0.1',
 	sources: [
 		'src/array.vala',
 		'src/shape.vala',
 		'src/ops.vala',
+		'src/ops_math.vala',
 	],
 	dependencies: [
 		dependency('glib-2.0'),

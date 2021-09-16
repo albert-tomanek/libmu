@@ -11,6 +11,11 @@ namespace Mu
 		}
 	}
 
+	// void axis_valid(int axis, Array arr)
+	// {
+	// 	if ()
+	// }
+
 	public bool shape_eq(int[] shape_a, int[] shape_b)
 	{
 		if (shape_a.length != shape_b.length) return false;
@@ -44,7 +49,7 @@ namespace Mu
 
 		for (int i = 0; i < shape.length; i++)
 		{
-			list += i.to_string();
+			list += shape[i].to_string();
 			list += (i != shape.length - 1) ? ", " : "";
 		}
 

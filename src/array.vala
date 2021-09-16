@@ -85,7 +85,7 @@ namespace Mu
 		/* Array access */
 
 		[CCode(sentinel = "G_MININT")]	// Couldn't think of a better sentinel if we're gonna support negative indices...<
-		public Array get(int i0, ...)
+		public new Array get(int i0, ...)
 		{
 			int[] indices = _parse_indices(i0, va_list());
 
@@ -140,6 +140,28 @@ namespace Mu
 					return ((float[]) this.bytes.data)[this.start + 0];
 				}
 			}
+			set {
+				if (this.shape.length != 0)
+				{
+					error("You may only set the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+				}
+				else
+				{
+					((float[]) this.bytes.data)[this.start + 0] = value;
+				}
+			}
+		}
+
+		/* Mutating arrays */
+
+		public Array reshape(int[] new_shape)
+		{
+			if (shape_length(this.shape) != shape_length(new_shape))
+			{
+				error("Cannot reshape array of shape %s into shape %s.", print_shape(this.shape), print_shape(new_shape));
+			}
+
+			return new Array.with_bytes(this.bytes, this.start, new_shape, this.dtype);
 		}
 
 		/* Convenience things */
@@ -188,5 +210,15 @@ namespace Mu
 			return str;
 		}
 
+	}
+
+	internal void copy_items(Array dst, int dst_index, Array src, int src_index, int n_items)
+	requires(dst.dtype == src.dtype)
+	{
+		Memory.copy(
+			((uint8 *) dst.bytes.data) + (dst_index * dtype_size(src.dtype)),
+			((uint8 *) src.bytes.data) + (src_index * dtype_size(src.dtype)),
+			n_items * dtype_size(src.dtype)
+		);
 	}
 }
