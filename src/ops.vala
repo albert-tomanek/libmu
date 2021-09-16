@@ -33,4 +33,19 @@ namespace Mu
 
 		return ret;
 	}
+
+	public Array arange(double start, double stop, double step = 1, DType dtype = DType.FLOAT32)
+	requires(step != 0)
+	{
+		int n_items = (int) (double.max(stop - start, 0) / step);
+
+		var arr = Array.zeros({n_items}, dtype);
+
+		for (int i = 0; i < n_items; i++)
+		{
+			((float[]) arr.bytes.data)[i] = (float) (start + i * step);
+		}
+
+		return arr;
+	}
 }
