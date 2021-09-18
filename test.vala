@@ -34,4 +34,17 @@ void test_ops()
 
 	var rep = Mu.repeat(a, 2, 0);
 	print(@"$rep\n");
+
+	// Test broadcasting
+	float[] data1 = {
+		0.0f,0.0f,1.0f, 0.0f,0.5f,0.5f, 0.5f,1.0f,0.0f,
+		0.0f,0.5f,0.5f, 1.0f,1.0f,0.5f, 0.5f,1.0f,0.0f,
+		0.5f,0.5f,0.0f, 0.0f,0.5f,0.0f, 0.0f,0.5f,0.5f
+	};
+	var img = Mu.Array.from(data1, {3, 3, 3});
+
+	float[] mask = {0f, 1f, 0f};
+	var img_green = Mu.mul(img, Mu.Array.from(mask, {3}));
+
+	print(@"$img_green\n");
 }

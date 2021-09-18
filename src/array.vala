@@ -84,9 +84,11 @@ namespace Mu
 
 		/* Array access */
 
-		[CCode(sentinel = "G_MININT")]	// Couldn't think of a better sentinel if we're gonna support negative indices...<
+		[CCode(sentinel = "G_MININT")]	// Couldn't think of a better sentinel if we're gonna support negative indices...
 		public new Array get(int i0, ...)
 		{
+			// You don't want to use this function in a loop because it has to create & return a new GObject every time it is called.
+
 			int[] indices = _parse_indices(i0, va_list());
 
 			if (indices.length > this.shape.length)

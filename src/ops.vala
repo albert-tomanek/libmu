@@ -26,7 +26,6 @@ namespace Mu
 			{
 				int dst_idx = (i * n_repeats + cur_repeat) * copy_len;		// no need for `start +` because we're copying into a new array.
 
-				message(@"copy $src_idx+$copy_len to $dst_idx+$copy_len");
 				copy_items(ret, dst_idx, arr, src_idx, copy_len);
 			}
 		}
