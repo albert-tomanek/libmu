@@ -21,6 +21,8 @@ namespace Mu
 		public int[] shape { get; internal set; }
 		public DType dtype { get; internal set; }
 
+		// internal TypeOps type_ops;
+
 		internal ByteArray bytes;
 		internal int start;
 
@@ -180,7 +182,6 @@ namespace Mu
 
 		private static string dim_printer(uint8[] data, int start, int[] shape, int dim)
 		{
-			// message(@"dim $dim, shape.length $(shape.length)");
 			int dim_len = (dim == 0) ? 1 : shape[shape.length - dim];	// If it's a scalar (ie. zero dimentions), treat it as a 1-length 1-dimentional array.
 
 			string str = "";

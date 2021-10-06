@@ -5,6 +5,7 @@ lib = library('mu',
 	sources: [
 		'src/array.vala',
 		'src/shape.vala',
+		'src/index.vala',
 		'src/ops.vala',
 		'src/ops_math.vala',
 	],

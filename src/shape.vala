@@ -11,11 +11,6 @@ namespace Mu
 		}
 	}
 
-	// void axis_valid(int axis, Array arr)
-	// {
-	// 	if ()
-	// }
-
 	public bool shape_eq(int[] shape_a, int[] shape_b)
 	{
 		if (shape_a.length != shape_b.length) return false;
