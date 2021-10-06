@@ -1,20 +1,12 @@
 // Used to fit less dimentional arrays onto more dimentional arrays.
 internal int[] idx_remainder(int[] idx, int[] shape)
-requires(idx.length <= shape.length)
 {
-	int[] result = new int[shape.length];
+	int[] result = new int[int.min(idx.length, shape.length)];
 
-	for (int dim = 0; dim < shape.length; dim++)
+	for (int dim = -1; dim >= -result.length; dim--)	// Align both arrays by their ends and not their beginnings.
 	{
-		if (dim >= shape.length - idx.length)
-		{
-			// Get the remainder.
-			result[dim] = idx[dim] % shape[dim];
-		}
-		else
-		{
-			result[dim] = 0;	// You have to account for indexes smaller than the shape. Ie when multiplying an array of shape {3,3,3} by an array of shape {3}, return {0%3, 0%3, 3%3} instead of just {3%3}.
-		}
+		// Get the remainder.
+		result[result.length + dim] = idx[idx.length + dim] % shape[shape.length + dim];	// Remember that 'adding' dim is actually adding -1 or -2  to the length. (offset from *end* of both.)
 	}
 
 	return result;

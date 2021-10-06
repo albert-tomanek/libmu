@@ -53,7 +53,6 @@ namespace Mu
 			{
 				int[] a_idx = idx_remainder(idx, a.shape);
 				int[] b_idx = idx_remainder(idx, b.shape);
-				message(@"$(print_shape(idx))\t\t$(print_shape(b.shape)) $(print_shape(b_idx))");
 
 				int   a_offset = idx_offset(a_idx, a.shape);
 				int   b_offset = idx_offset(b_idx, b.shape);

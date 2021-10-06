@@ -53,19 +53,19 @@ void test_ops()
 	}
 
 	// Test more sofisticated broadcasting
-	// {
-	// 	float[] data_a = {10, 12};	// [[[10],[12]]]
-	// 	float[] data_b = {3, 4};	// [[[3]],[[4]]]
-	//
-	// 	var result = Mu.mul(
-	// 		Mu.Array.from(data_a, {1,2,1}),
-	// 		Mu.Array.from(data_b, {2,1,1})
-	// 	);
-	//
-	// 	assert(Mu.shape_eq(result.shape, {2,2,1}));
-	// 	//assert(result.flatten == {30, 36, 40, 48});
-	//
-	// 	print(@"$(Mu.print_shape(result.shape))\n");
-	// 	print(@"$result\n");
-	// }
+	{
+		float[] data_a = {10, 12};	// [[[10],[12]]]
+		float[] data_b = {3, 4};	// [[[3]],[[4]]]
+
+		var result = Mu.mul(
+			Mu.Array.from(data_a, {1,2,1}),
+			Mu.Array.from(data_b, {2,1,1})
+		);
+
+		assert(Mu.shape_eq(result.shape, {2,2,1}));
+		//assert(result.flatten == {30, 36, 40, 48});
+
+		print(@"$(Mu.print_shape(result.shape))\n");
+		print(@"$result\n");
+	}
 }
