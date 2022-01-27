@@ -1,6 +1,6 @@
 namespace Mu
 {
-	public Array mul(Array a, Array b)
+	public Array mul(Array a, Array b)	// binary operations
 	requires(a.dtype == b.dtype)
 	{
 		// https://numpy.org/doc/stable/user/basics.broadcasting.html
@@ -24,7 +24,7 @@ namespace Mu
 		}
 
 		/* Create the result array */
-		var result = Mu.Array.zeros(new_shape, a.dtype);
+		var result = Mu.zeros(new_shape, a.dtype);
 
 		// int[] idx = new int[result.shape.length];	// {0, 0, 0, ...}
 		// flatten_index(int[] index, int[] shape)
@@ -70,4 +70,82 @@ namespace Mu
 			}
 		}
 	}
+
+	public Array sum(Array a, int axis = -1)	// unary operations
+	{
+		if (axis >= a.shape.length || axis < -a.shape.length)
+		{
+			error("Axis %d is out of bounds for shape %s of length %d.", axis, print_shape(a.shape), a.shape.length);
+		}
+		else if (axis < 0)
+		{
+			return sum(a, axis + a.shape.length);
+		}
+		else
+		{
+			// int[] new_shape = a.shape.copy();
+			// new_shape[axis] = 1;
+			//
+			// Array accum = Mu.zeros(new_shape);
+			//
+			// int[] idx = new int[a.shape.length];	// {0, 0, ...}
+			//
+			// for (idx[axis] = 0; idx[axis] < a.shape[axis]; i++)
+			// {
+			// 	var current = accum.get_i({})
+			// 	current.set(add(current, a.get_i(idx[])));
+			//
+			// 	// accum = Mu.add(accum, a[i]);
+			// }
+			//
+			// return accum;
+			return null;
+		}
+	}
+
+	public Array add(Array a, Array b)
+	requires(a.dtype == b.dtype)
+	{
+		int[] new_shape = new int[int.max(a.shape.length, b.shape.length)];
+		for (int dim = 0; dim < new_shape.length; dim++)
+		{
+			int dim_a = (dim >= new_shape.length - a.shape.length) ? a.shape[dim - (new_shape.length - a.shape.length)] : 1;
+			int dim_b = (dim >= new_shape.length - b.shape.length) ? b.shape[dim - (new_shape.length - b.shape.length)] : 1;
+			if (dim_a == dim_b || dim_a == 1 || dim_b == 1)
+			{
+				new_shape[dim] = int.max(dim_a, dim_b);
+			}
+			else
+			{
+				error("Shapes %s and %s are not compatible in dimention %d.", print_shape(a.shape), print_shape(b.shape), dim);
+			}
+		}
+		var result = Mu.zeros(new_shape, a.dtype);
+		int[] idx = new int[result.shape.length];		// {0, 0, 0, ...} This is used by mul_recersive to keep track of where it's at.
+		add_recursive(ref idx, 0, result, a, b);
+		return result;
+	}
+
+	private void add_recursive(ref int[] idx, int dim, Array res, Array a, Array b)	// Forget ref-counting
+	{
+		for (idx[dim] = 0; idx[dim] < res.shape[dim]; idx[dim]++)
+		{
+			if (dim == idx.length - 1)
+			{
+				int[] a_idx = idx_remainder(idx, a.shape);
+				int[] b_idx = idx_remainder(idx, b.shape);
+				int   a_offset = idx_offset(a_idx, a.shape);
+				int   b_offset = idx_offset(b_idx, b.shape);
+				int   res_offset = idx_offset(idx, res.shape);
+				float p = ((float[]) a.bytes.data)[a_offset];
+				float q = ((float[]) b.bytes.data)[b_offset];
+				((float[]) res.bytes.data)[res_offset] = p + q;
+			}
+			else
+			{
+				add_recursive(ref idx, dim + 1, res, a, b);
+			}
+		}
+	}
+
 }

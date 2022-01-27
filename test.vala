@@ -1,41 +1,67 @@
 void main()
 {
-	test_ops();
+	test_array();
+	// test_ops();
+	// test_math();
 }
 
 void test_array()
 {
-	// Test if printing and `from` works
-	float[] data = {1,2,3, 4,5,6, 7,8,9, 10,11,12, 13,14,15, 16};
-	int g = 4;
-	var a = Mu.Array.from(data, {2, g, 2});
-	print(@"$a\n");
+	{
+		// Test if printing and `from` works
+		float[] data = {1,2,3, 4,5,6, 7,8,9, 10,11,12, 13,14,15, 16};
+		int g = 4;
+		var a = Mu.Array.from(data, {2, g, 2});
+		print(@"$a\n");
 
-	// Test printing scalars
-	var scalar = Mu.Array.from(data, {});
-	print(@"$scalar\n");
-	assert(scalar.value == 1.0);
+		// Test printing scalars
+		var scalar = Mu.Array.from(data, {});
+		print(@"$scalar\n");
+		assert(scalar.value == 1.0);
 
-	// Test slices
-	Mu.Array piece = a[1, -1];
-	print(@"$piece\n");
+		// Test slices
+		Mu.Array piece = a[1, -1];
+		print(@"$piece\n");
 
-	a[1, 3, 1].value = 100f;
-	assert(a[1, -1, -1].value == 100f);
+		a[1, 3, 1].value = 100f;
+		assert(a[1, -1, -1].value == 100f);
 
-	// Test reshaping
-	var reshaped = a.reshape({16, 1});
-	print(@"$reshaped\n");
+		// Test reshaping
+		var reshaped = a.reshape({16, 1});
+		print(@"$reshaped\n");
+	}
+
+	// Test iteration
+	{
+		float[] a_data = {1,2,3, 4,5,6, 7,8,9, 10,11,12};
+		var a = Mu.Array.from(a_data, {2,2,3});
+
+		int i = 0;
+		a.foreach((val, idx) => {
+			message(Mu.print_shape(idx));
+			val[0].value = (float) i;		// should turn array into: 0,2,3, 1,5,6, 2,8,9 ...
+			i++;
+		}, 2);
+
+		message(@"\n$a");
+		assert(i == 4);
+	}
 }
 
 void test_ops()
 {
-	var a = Mu.arange(1, 7);
-	a = a.reshape({2, 3});
+	// Generation
+	{
+		var a = Mu.arange(1, 7);
+		a = a.reshape({2, 3});
 
-	var rep = Mu.repeat(a, 2, 0);
-	print(@"$rep\n");
+		var rep = Mu.repeat(a, 2, 0);
+		print(@"$rep\n");
+	}
+}
 
+void test_math()
+{
 	// Test broadcasting
 	{
 		float[] data = {
@@ -67,5 +93,14 @@ void test_ops()
 
 		print(@"$(Mu.print_shape(result.shape))\n");
 		print(@"$result\n");
+	}
+
+	// Summation
+	{
+		var arr = Mu.ones({2, 5, 6});
+		var sum = Mu.sum(arr, 1);
+
+		print(@"$arr\n");
+		print(@"$sum\n");
 	}
 }

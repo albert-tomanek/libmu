@@ -12,7 +12,7 @@ namespace Mu
 		var new_shape = arr.shape;
 		new_shape[axis] = arr.shape[axis] * n_repeats;
 
-		var ret = Array.zeros(new_shape, arr.dtype);
+		var ret = Mu.zeros(new_shape, arr.dtype);
 
 		/* Copy the data */
 
@@ -38,7 +38,7 @@ namespace Mu
 	{
 		int n_items = (int) (double.max(stop - start, 0) / step);
 
-		var arr = Array.zeros({n_items}, dtype);
+		var arr = Mu.zeros({n_items}, dtype);
 
 		for (int i = 0; i < n_items; i++)
 		{

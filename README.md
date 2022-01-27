@@ -1,4 +1,6 @@
 A GLib-based library that tries to emulate Python's `numpy`.
+Not MT-safe.
+The aim here isn't to be as efficient as possible, it's to emulate the usage of Numpy as closely as possible.
 
 ### Why's it called *Mu*?
 

@@ -62,29 +62,32 @@ namespace Mu
 			return arr;
 		}
 
-		public static Array zeros(int[] shape, DType dtype = DType.FLOAT32)
-		{
-			var arr = new Array(shape, dtype);
-			arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
-
-			return arr;
-		}
-
-		public static Array ones(int[] shape, DType dtype = DType.FLOAT32)
-		{
-			var arr = Array.zeros(shape, dtype);
-
-			for (int i = 0; i < shape_length(shape); i++)
-			{
-				((float[]) arr.bytes.data)[i] = 1.0f;
-			}
-
-			return arr;
-		}
-
 		/* Duplication */
 
 		/* Array access */
+
+		public float value {
+			get {
+				if (this.shape.length != 0)
+				{
+					error("You may only get the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+				}
+				else
+				{
+					return ((float[]) this.bytes.data)[this.start + 0];
+				}
+			}
+			set {
+				if (this.shape.length != 0)
+				{
+					error("You may only set the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+				}
+				else
+				{
+					((float[]) this.bytes.data)[this.start + 0] = value;
+				}
+			}
+		}
 
 		[CCode(sentinel = "G_MININT")]	// Couldn't think of a better sentinel if we're gonna support negative indices...
 		public new Array get(int i0, ...)
@@ -93,6 +96,28 @@ namespace Mu
 
 			int[] indices = _parse_indices(i0, va_list());
 
+			return this.get_i(indices);
+		}
+
+		static int[] _parse_indices(int idx0, va_list rest)
+		{
+			/* List indices are passed as an int and a va_list (because of how C works).
+			 * This function converts them into an int[].									*/
+
+			var arr = new GLib.Array<int>();
+			arr.append_val(idx0);
+
+			while (true) {
+				int idx = rest.arg();
+				if (idx == int.MIN) break;	// You need to set the `sentinel` ccode so that Vala knows how to terminate the arg list properly.
+				arr.append_val(idx);
+			}
+
+			return arr.data;
+		}
+
+		public Array get_i(int[] indices)
+		{
 			if (indices.length > this.shape.length)
 			{
 				error("Too many indices for array: array is %d-dimensional, but %d were indexed.", this.shape.length, indices.length);
@@ -116,42 +141,36 @@ namespace Mu
 			return new Array.with_bytes(this.bytes, start, this.shape[indices.length:], this.dtype);
 		}
 
-		static int[] _parse_indices(int idx0, va_list rest)
+		/* Iteration */
+
+		public delegate void ForeachCb(Array sub, int[] idx);
+
+		public void @foreach(ForeachCb callback, int max_depth = -1)
+		requires(max_depth <= this.shape.length)
+		requires(max_depth >= 0 || max_depth == -1)
 		{
-			/* List indices are passed as an int and a va_list (because of how C works).
-			 * This function converts them into an int[].									*/
-
-			var arr = new GLib.Array<int>();
-			arr.append_val(idx0);
-
-			while (true) {
-				int idx = rest.arg();
-				if (idx == int.MIN) break;	// You need to set the `sentinel` ccode so that Vala knows how to terminate the arg list properly.
-				arr.append_val(idx);
+			if (max_depth == 0)
+			{
+				callback(this, {});
 			}
-
-			return arr.data;
+			else
+			{
+				int[] idx = new int[this.shape.length];	// {0, 0, ...}
+				foreach_rec(this, idx, 1, (max_depth == -1) ? int.MAX : max_depth, callback);
+			}
 		}
 
-		public float value {
-			get {
-				if (this.shape.length != 0)
+		static void foreach_rec(Array arr, /*out*/ int[] idx, int dim, int max_dim, ForeachCb callback)
+		{
+			for (idx[dim-1] = 0; idx[dim-1] < arr.shape[dim-1]; idx[dim-1]++)
+			{
+				if (dim == arr.shape.length || dim == max_dim)
 				{
-					error("You may only get the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+					callback(arr.get_i(idx[:dim]), idx[:dim]);
 				}
 				else
 				{
-					return ((float[]) this.bytes.data)[this.start + 0];
-				}
-			}
-			set {
-				if (this.shape.length != 0)
-				{
-					error("You may only set the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
-				}
-				else
-				{
-					((float[]) this.bytes.data)[this.start + 0] = value;
+					foreach_rec(arr, idx, dim + 1, max_dim, callback);
 				}
 			}
 		}
@@ -223,5 +242,31 @@ namespace Mu
 			((uint8 *) src.bytes.data) + (src_index * dtype_size(src.dtype)),
 			n_items * dtype_size(src.dtype)
 		);
+	}
+
+	public Array zeros(int[] shape, DType dtype = DType.FLOAT32)
+	{
+		var arr = new Array(shape, dtype);
+		arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
+
+		for (int i = 0; i < shape_length(shape); i++)
+		{
+			((float[]) arr.bytes.data)[i] = 0.0f;
+		}
+
+		return arr;
+	}
+
+	public Array ones(int[] shape, DType dtype = DType.FLOAT32)
+	{
+		var arr = new Array(shape, dtype);
+		arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
+
+		for (int i = 0; i < shape_length(shape); i++)
+		{
+			((float[]) arr.bytes.data)[i] = 1.0f;
+		}
+
+		return arr;
 	}
 }
