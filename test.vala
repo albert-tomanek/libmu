@@ -97,8 +97,8 @@ void test_math()
 
 	// Summation
 	{
-		var arr = Mu.arange(0,2*2*3).reshape({2,2,3});
-		var sum = Mu.sum(arr, 2);
+		var arr = Mu.arange(0, 2*2*3).reshape({2,2,3});
+		var sum = Mu.sum(arr, {2});
 
 		print(@"$arr\n");
 		print(@"$sum\n");

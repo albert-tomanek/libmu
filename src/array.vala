@@ -30,16 +30,18 @@ namespace Mu
 		) == 0;
 	}
 
-	public Array _scalar(float val)
+	public Array scalar(float val)
 	{
 		float[] data = {val};
-		return Array.from(data, {});
+		return Array.from(data, {1});
 	}
 
 	public class Array : Object
 	{
 		public int[] shape { get; internal set; }
 		public DType dtype { get; internal set; }
+
+		public int ndim { get { return this.shape.length; } }
 
 		// internal TypeOps type_ops;
 
@@ -48,7 +50,7 @@ namespace Mu
 
 		internal Array(int[] shape, DType dtype)
 		{
-			// This constructor is for when you allocate your own data later on
+			// This constructor is for when you allocate your own data later on. If you need an already allocated array to output to, use Mu.zeros()
 
 			this.shape = shape;	// shape is actually 2 arguments under the hood so we can't use Object(shape: ..., dtype: ...) unfortunately. :-(
 			this.dtype = dtype;
@@ -59,7 +61,7 @@ namespace Mu
 
 		internal Array.with_bytes(ByteArray bytes, int start, int[] shape, DType dtype = DType.FLOAT32)
 		{
-			// This constructor is for when the data was already allocated and you jist want this array to use it as well.
+			// This constructor is for when the data was already allocated and you just want this array to use it as well.
 
 			this.shape = shape;
 			this.dtype = dtype;

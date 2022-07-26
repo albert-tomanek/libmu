@@ -1,23 +1,21 @@
-/* Compile: valac *.vala ../shape.vala -o tinyndarray */
+/* Compile: valac -g *.vala ../shape.vala ../array.vala -o tinyndarray */
 
-template <typename F>
-NdArray ApplyDualOp(const NdArray& lhs, const NdArray& rhs, F op) {
-    if (lhs.shape() == rhs.shape()) {
-        // Apply without broadcast because of same size for speed up.
-        NdArray ret(lhs.shape());
-        // Simply apply all
-        ApplyOpSimple(ret, lhs, rhs, op);
-        return ret;
-    } else {
-        // Check it is possible to broadcast
-        const Shape& ret_shape = CheckBroadcastable(lhs.shape(), rhs.shape());
-        // Apply broadcast
-        NdArray ret(ret_shape);
-        ApplyOpBroadcast(ret, lhs, rhs, 0, 1, WrapOpForIter(op));
-        return ret;
-    }
+Mu.Array add(Mu.Array a, Mu.Array b)
+{
+    return ApplyDualOp(a, b, (p, q) => {
+        return p + q;
+    });
 }
 
 void main()
 {
+    float[] data_a = {1,2, 3,4, 5,6};
+    var a = Mu.Array.from(data_a, {3, 2});
+
+    float[] data_b = {100, 200};
+    var b = Mu.scalar(50);//Array.from(data_b, {2});
+
+    var c = add(a, b);
+
+    print(@"$a\n\n$b\n\n$c");
 }

@@ -8,6 +8,10 @@ lib = library('mu',
 		'src/index.vala',
 		'src/ops.vala',
 		'src/ops_math.vala',
+
+		'src/tinyndarray/broadcast.vala',
+		'src/tinyndarray/reduce.vala',
+		'src/tinyndarray/parallel.vala',
 	],
 	dependencies: [
 		dependency('glib-2.0'),

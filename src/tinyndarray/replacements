@@ -4,11 +4,17 @@ error($1);
 const 
 
 
-.size\(\)
-.length
+\.size\(\)
+\.length
+
+\.shape\(\)
+\.shape
 
 (\W)Shape&?
 $1int[]
+
+Axis&?
+int[]
 
 \.push_back
  += 
@@ -18,3 +24,9 @@ int[] $1 = new int[$2]
 
 std::vector<int>&?
 int[]
+
+^static
+internal
+
+NdArray&?
+Mu.Array
