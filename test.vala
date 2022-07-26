@@ -1,8 +1,8 @@
 void main()
 {
-	test_array();
+	// test_array();
 	// test_ops();
-	// test_math();
+	test_math();
 }
 
 void test_array()
@@ -97,8 +97,8 @@ void test_math()
 
 	// Summation
 	{
-		var arr = Mu.ones({2, 5, 6});
-		var sum = Mu.sum(arr, 1);
+		var arr = Mu.arange(0,2*2*3).reshape({2,2,3});
+		var sum = Mu.sum(arr, 2);
 
 		print(@"$arr\n");
 		print(@"$sum\n");

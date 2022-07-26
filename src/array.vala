@@ -16,6 +16,26 @@ namespace Mu
 		}
 	}
 
+	public bool _eq(Array a, Array b)	// Undercore because it's not equivalent to numpy `equal` but we desparately need it for debug etc.
+	{
+		if (!shape_eq(a.shape, b.shape))
+			return false;
+		if (a.dtype != b.dtype)
+			return false;
+
+		return Memory.cmp(
+			((uint8 *) a.bytes.data) + (a.start * dtype_size(a.dtype)),
+			((uint8 *) b.bytes.data) + (b.start * dtype_size(a.dtype)),
+			shape_length(a.shape)*dtype_size(a.dtype)
+		) == 0;
+	}
+
+	public Array _scalar(float val)
+	{
+		float[] data = {val};
+		return Array.from(data, {});
+	}
+
 	public class Array : Object
 	{
 		public int[] shape { get; internal set; }
@@ -67,6 +87,8 @@ namespace Mu
 		/* Array access */
 
 		public float value {
+			/* Set the value of 0d arrays directly */
+
 			get {
 				if (this.shape.length != 0)
 				{
@@ -87,6 +109,21 @@ namespace Mu
 					((float[]) this.bytes.data)[this.start + 0] = value;
 				}
 			}
+		}
+
+		public new void set(Array that)
+		requires(that.dtype == this.dtype)
+		{
+			if (!shape_eq(that.shape, this.shape))
+			{
+				error("Can't `set` array of shape %s to array of shape %s.", print_shape(this.shape), print_shape(that.shape));
+			}
+
+			Memory.copy(
+				((uint8 *) this.bytes.data) + (this.start * dtype_size(this.dtype)),
+				((uint8 *) that.bytes.data) + (that.start * dtype_size(this.dtype)),
+				shape_length(this.shape)*dtype_size(this.dtype)
+			);
 		}
 
 		[CCode(sentinel = "G_MININT")]	// Couldn't think of a better sentinel if we're gonna support negative indices...

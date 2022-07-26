@@ -83,26 +83,28 @@ namespace Mu
 		}
 		else
 		{
-			// int[] new_shape = a.shape.copy();
-			// new_shape[axis] = 1;
-			//
-			// Array accum = Mu.zeros(new_shape);
-			//
-			// int[] idx = new int[a.shape.length];	// {0, 0, ...}
-			//
-			// for (idx[axis] = 0; idx[axis] < a.shape[axis]; i++)
-			// {
-			// 	var current = accum.get_i({})
-			// 	current.set(add(current, a.get_i(idx[])));
-			//
-			// 	// accum = Mu.add(accum, a[i]);
-			// }
-			//
-			// return accum;
-			return null;
+			int[] new_shape = a.shape.copy();
+			new_shape[axis] = 1;
+
+			Array accum = Mu.zeros(new_shape);
+
+			a.foreach((val, idx) => {
+				message(@"adding:\n$val\n");
+				for (int i = 0; i < a.shape[axis]; i++)
+				{
+					var l = accum.get_i(idx);
+					print(@"$l\n");
+					// accum.get_i(idx).set(add(l, val[i]));
+					accum.get_i(idx).set(add(l, _scalar(1)));
+				}
+				print(@"$accum\n");
+			}, axis);	// SOmething seems to be persisting between loops perhaps?
+
+			return accum;
 		}
 	}
 
+	// TODO: Teach it to add scalars		add(_scalar(5), _scalar(3)).reshape({1})
 	public Array add(Array a, Array b)
 	requires(a.dtype == b.dtype)
 	{
