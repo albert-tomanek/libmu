@@ -1,0 +1,20 @@
+throw std::runtime_error\((.*)\);
+error($1);
+
+const 
+
+
+.size\(\)
+.length
+
+(\W)Shape&?
+$1int[]
+
+\.push_back
+ += 
+
+std::vector<int> (\w+)\((\w+)\)
+int[] $1 = new int[$2]
+
+std::vector<int>&?
+int[]
