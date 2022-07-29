@@ -1,8 +1,8 @@
 void main()
 {
 	// test_array();
-	// test_ops();
-	test_math();
+	test_ops();
+	//  test_math();
 }
 
 void test_array()
@@ -58,6 +58,17 @@ void test_ops()
 		var rep = Mu.repeat(a, 2, 0);
 		print(@"$rep\n");
 	}
+
+	// Concatenate
+	{
+		float[] data = {1,2, 3,4, 5,6};
+		var a = Mu.Array.from(data, {3,2});
+
+		var conc = Mu.concatenate({a[:1], Mu.expand_dims(a[2], 0)}, 1);
+		print(@"$conc\n");
+
+		assert(Mu.eq(conc, a));
+	}
 }
 
 void test_math()
@@ -102,5 +113,17 @@ void test_math()
 
 		print(@"$arr\n");
 		print(@"$sum\n");
+
+		// assert(sum == {{3, 12}, {21, 30}})
+	}
+
+	// Matrix ops
+	{
+		float[] data = {1,4,-2, -2,1,7};
+		var a = Mu.Array.from(data, {6});
+		var prod = Mu.dot(a[:3], a[3:]);
+
+		print(@"dot of $(a[:3]) and $(a[3:]) is $prod\n");
+		assert(prod.value == -12f);
 	}
 }

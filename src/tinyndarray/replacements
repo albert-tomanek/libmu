@@ -5,10 +5,10 @@ const
 
 
 \.size\(\)
-\.length
+.length
 
 \.shape\(\)
-\.shape
+.shape
 
 (\W)Shape&?
 $1int[]
@@ -22,11 +22,20 @@ int[]
 std::vector<int> (\w+)\((\w+)\)
 int[] $1 = new int[$2]
 
+static_cast<(\w+)>
+($1)
+
 std::vector<int>&?
 int[]
 
 ^static
 internal
 
-NdArray&?
-Mu.Array
+NdArray::(Const)?Iter&?
+ByteArray
+
+(\w)NdArray&?
+$1Mu.Array
+
+auto&?&?
+var

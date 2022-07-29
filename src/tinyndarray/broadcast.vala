@@ -9,7 +9,7 @@ internal int[] CheckBroadcastable(int[] l_shape, int[] r_shape) {
 
     // Check empty
     if (r_shape.length == 0 || (r_shape.length == 1 && r_shape[0] == 0)) {
-        error("Broadcast of empty array");
+        error("Can't broadcast an empty array (of shape %s).", Mu.print_shape(r_shape));
     }
 
     // Compute broadcasted shape
@@ -28,7 +28,7 @@ internal int[] CheckBroadcastable(int[] l_shape, int[] r_shape) {
             } else if (r == 1) {
                 shape[i] = l;  // right broadcast
             } else {
-                error("Non operatable shape (" + Mu.print_shape(l_shape) + " vs " + Mu.print_shape(r_shape) + ")");
+                error("Shapes %s and %s are not compatible in dimention %d.", Mu.print_shape(l_shape), Mu.print_shape(r_shape), (int) i);
             }
         }
     }
@@ -37,7 +37,7 @@ internal int[] CheckBroadcastable(int[] l_shape, int[] r_shape) {
 
 internal int[] PadShape(int[] shape, size_t size) {
     if (size < shape.length) {
-        error("Invalid shape to pad");
+        error("Shape %s is too long to pad to %d dimensions.", Mu.print_shape(shape), (int) size);
     }
     size_t n_pad = size - shape.length;
     int[] ret_shape = new int[size];
@@ -119,9 +119,9 @@ internal int[] ComputeChildSizes(int[] shape) {
 
 delegate float F(float p, float q);
 
-void ApplyOpBroadcastImpl(ByteArray ret_data,
-                          /*const*/ ByteArray l_data,
-                          /*const*/ ByteArray r_data,
+void ApplyOpBroadcastImpl([CCode(array_length = false)] float[] ret_data,
+                          [CCode(array_length = false)] float[] l_data,
+                          [CCode(array_length = false)] float[] r_data,
                           int[] ret_shape, int ret_size,
                           int[] l_steps,
                           int[] r_steps,
@@ -142,7 +142,7 @@ void ApplyOpBroadcastImpl(ByteArray ret_data,
         }
 
         // Operate
-        ((float[]) ret_data.data)[ret_idx] = op(((float[]) l_data.data)[l_idx], ((float[]) r_data.data)[r_idx]);
+        ret_data[ret_idx] = op(l_data[l_idx], r_data[r_idx]);
 
         // Go up and count
         for (; start_depth < depth; depth--) {
@@ -198,7 +198,7 @@ void ApplyOpBroadcast(Mu.Array ret, Mu.Array lhs, Mu.Array rhs,
                              l_steps, r_steps, 1, n_depth, ret_step, op);
     });
 #else  // Run sequentially
-    ApplyOpBroadcastImpl(ret.bytes, lhs.bytes, rhs.bytes, ret_shape,
+    ApplyOpBroadcastImpl(((float[]) ret.bytes.data), ((float[]) lhs.bytes.data)[lhs.start:], ((float[]) rhs.bytes.data)[rhs.start:], ret_shape,
                          Mu.shape_length(ret.shape), l_steps, r_steps, 0,
                          n_depth, ret_step, op);
 #endif
@@ -215,7 +215,7 @@ Mu.Array ApplyDualOp(Mu.Array lhs, Mu.Array rhs, F op) {
         // Check it is possible to broadcast
         int[] ret_shape = CheckBroadcastable(lhs.shape, rhs.shape);
         // Apply broadcast
-        var ret = Mu.zeros  (ret_shape, lhs.dtype);
+        var ret = Mu.zeros(ret_shape, lhs.dtype);
         ApplyOpBroadcast(ret, lhs, rhs, 0, 1, op);
         return ret;
     }

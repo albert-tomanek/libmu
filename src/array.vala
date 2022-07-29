@@ -61,12 +61,12 @@ namespace Mu
 
 		internal Array.with_bytes(ByteArray bytes, int start, int[] shape, DType dtype = DType.FLOAT32)
 		{
-			// This constructor is for when the data was already allocated and you just want this array to use it as well.
+			// This constructor is for when the data was already allocated and you just want this array to share it.
 
 			this.shape = shape;
 			this.dtype = dtype;
 
-			this.bytes = bytes;
+			this.bytes = bytes;	// Data gets REFERENCED. Changes made to this array will be reflected in the source array as well.
 			this.start = start;
 		}
 
@@ -86,15 +86,25 @@ namespace Mu
 
 		/* Duplication */
 
+		public Array copy()
+		{
+			Array ret = new Array(this.shape, this.dtype);
+			
+			ret.bytes.set_size(shape_length(this.shape) * dtype_size(this.dtype));
+			Memory.copy(ret.bytes.data, (void *) this.bytes.data[this.start * dtype_size(this.dtype)], ret.bytes.len);	// If this.start is nonzero, this will only copy the subset of the data that is used by this array.
+			
+			return ret;
+		}
+
 		/* Array access */
 
 		public float value {
 			/* Set the value of 0d arrays directly */
 
 			get {
-				if (this.shape.length != 0)
+				if (shape_length(this.shape) != 1)
 				{
-					error("You may only get the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+					error("You may only get the literal value of an array with shape {1}. This array has shape %s.", print_shape(this.shape));
 				}
 				else
 				{
@@ -102,9 +112,9 @@ namespace Mu
 				}
 			}
 			set {
-				if (this.shape.length != 0)
+				if (shape_length(this.shape) != 1)
 				{
-					error("You may only set the literal value of a 0-dimentional array. This array has %d dimensions (shape %s).", this.shape.length, print_shape(this.shape));
+					error("You may only set the literal value of an array with shape {1}. This array has shape %s.", print_shape(this.shape));
 				}
 				else
 				{
@@ -143,16 +153,16 @@ namespace Mu
 			/* List indices are passed as an int and a va_list (because of how C works).
 			 * This function converts them into an int[].									*/
 
-			var arr = new GLib.Array<int>();
-			arr.append_val(idx0);
+			int[] arr = {};
+			arr += idx0;
 
 			while (true) {
 				int idx = rest.arg();
 				if (idx == int.MIN) break;	// You need to set the `sentinel` ccode so that Vala knows how to terminate the arg list properly.
-				arr.append_val(idx);
+				arr += idx;
 			}
 
-			return arr.data;
+			return arr;
 		}
 
 		public Array get_i(int[] indices)
@@ -178,6 +188,32 @@ namespace Mu
 			}
 
 			return new Array.with_bytes(this.bytes, start, this.shape[indices.length:], this.dtype);
+		}
+
+		public long length { get { return this.shape[0]; } }	// This is necessary for the slice semantics of `array[3:]`
+		
+		public Array slice(long start, long end)
+		{
+			if (start < -this.shape[0] || start > this.shape[0] ||
+				end < -this.shape[0] || end > this.shape[0])
+			{
+				error("Slice [%s:%s] is out of bounds for array of shape %s.", start != 0 ? start.to_string() : "", end != 0 ? end.to_string() : "", print_shape(this.shape));
+			}
+
+			if (start < 0) start += this.shape[0];
+			if (end < 0) end += this.shape[0];
+
+			if (start > end)
+			{
+				error("Slice end index %ld is before start index %ld.", end, start);
+			}
+
+			var before_start = this.shape;
+			before_start[0] = (int) start;
+			var shape = this.shape;
+			shape[0] = (int) (end - start + 1);
+
+			return new Array.with_bytes(this.bytes, shape_length(before_start), shape, this.dtype);
 		}
 
 		/* Iteration */
@@ -214,6 +250,21 @@ namespace Mu
 			}
 		}
 
+		public delegate float ApplyFn(float val);
+
+		public Array apply(ApplyFn fn)
+		{
+			var result = this.copy();
+			unowned float[] data = (float[]) result.bytes.data;
+
+			for (int i = 0; i < shape_length(result.shape); i++)
+			{
+				data[i] = fn(data[i]);
+			}
+
+			return result;
+		}
+
 		/* Mutating arrays */
 
 		public Array reshape(int[] new_shape)
@@ -227,7 +278,6 @@ namespace Mu
 		}
 
 		/* Convenience things */
-		// delegate string DepthIter(uint8[] data, int start_idx, int[] shape, int dimension);
 
 		public string to_string()
 		{
@@ -307,5 +357,47 @@ namespace Mu
 		}
 
 		return arr;
+	}
+
+	public Array expand_dims(Array a, int axis)
+	{
+		if (axis < -a.shape.length || axis > a.shape.length)
+			error("Axis %d is out of bounds for array of shape %s.", axis, print_shape(a.shape));
+
+		if (axis < 0)
+			axis += a.shape.length;
+
+		int[] new_shape = new int[a.shape.length + 1];
+
+		for (int i = 0; i < new_shape.length; i++)
+		{
+			if (i < axis)
+				new_shape[i] = a.shape[i];
+			else if (i == axis)
+				new_shape[i] = 1;
+			else
+				new_shape[i] = a.shape[i - 1];
+		}
+
+		a.shape = new_shape;
+
+		return a;
+	}
+
+	public Array squeeze(Array a)
+	{
+		int[] new_shape = {};
+
+		foreach (int dim in a.shape)
+		{
+			if (dim == 1)
+				continue;
+			else
+				new_shape += dim;
+		}
+
+		a.shape = new_shape;
+
+		return a;
 	}
 }

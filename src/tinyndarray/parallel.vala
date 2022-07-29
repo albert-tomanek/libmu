@@ -1,6 +1,44 @@
-delegate float RunParallelWithReduce_Op(int idx);
+delegate void RunParallelFn(int idx);
 
-float RunParallelWithReduce(int size, RunParallelWithReduce_Op op, F reduce, float init_v) {
+void RunParallel(int size, RunParallelFn op) {
+    //  // Decide parallelization parameters
+    //  int n_workers = -1, n_batch = -1, batch_size = -1;
+    //  GetParallelParams(size, n_workers, n_batch, batch_size);
+
+    //  if (n_workers <= 1) {
+        // Single execution
+        for (int i = 0; i < size; i++) {
+            // Operation
+            op(i);
+        }
+    //  } else {
+    //      // Parallel execution
+    //      std::atomic<int> next_batch(0);
+    //      std::vector<std::thread> workers(static_cast<size_t>(n_workers));
+    //      for (auto&& worker : workers) {
+    //          worker = std::thread([ =, &next_batch ]() noexcept {
+    //              int batch_cnt = 0;
+    //              while ((batch_cnt = next_batch++) < n_batch) {
+    //                  for (int i = 0; i < batch_size; i++) {
+    //                      const int idx = batch_size * batch_cnt + i;
+    //                      if (size <= idx) {
+    //                          break;
+    //                      }
+    //                      // Operation
+    //                      op(idx);
+    //                  }
+    //              }
+    //          });
+    //      }
+    //      for (auto&& worker : workers) {
+    //          worker.join();
+    //      }
+    //  }
+}
+
+delegate float RunParallelWithReduceFn(int idx);
+
+float RunParallelWithReduce(int size, RunParallelWithReduceFn op, F reduce, float init_v) {
     //  // Decide parallelization parameters
     //  int n_workers = -1, n_batch = -1, batch_size = -1;
     //  GetParallelParams(size, n_workers, n_batch, batch_size);

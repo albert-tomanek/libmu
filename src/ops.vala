@@ -47,4 +47,11 @@ namespace Mu
 
 		return arr;
 	}
+
+	/* Grouping */
+
+	public Array concatenate(Array[] arrays, int axis = 0)
+	{
+		return ConcatenateNdArray(arrays, axis);
+	}
 }

@@ -123,8 +123,8 @@ internal int[] ComputeReduceSizes(int[] src_shape, size_t axis, out int n_upper,
     return ret_shape;
 }
 
-float ReduceAxisAll(ByteArray data, size_t size, float init_v, F reduce_op) {
-    RunParallelWithReduce_Op op = (i) => ((float[]) data.data)[i];
+float ReduceAxisAll([CCode(array_length = false)] float[] data, size_t size, float init_v, F reduce_op) {
+    RunParallelWithReduceFn op = (i) => data[i];
     float ret = RunParallelWithReduce((int) size, op,
                                 reduce_op, init_v);
     return ret;
@@ -143,8 +143,8 @@ Mu.Array ReduceAxisOne(Mu.Array src, size_t axis, float init_v,
     // Create result array with fill
     Mu.Array ret = Mu.mul(Mu.ones(ret_shape), Mu.scalar(init_v));
 
-    var src_data = src.bytes;
-    var ret_data = ret.bytes;
+    float[] src_data = ((float[]) src.bytes.data)[src.start:];
+    float[] ret_data = ((float[]) ret.bytes.data);
 
     // Reduce function
     ReduceAxisOne_ReduceFn reduce = (u_idx) => {
@@ -154,10 +154,10 @@ Mu.Array ReduceAxisOne(Mu.Array src, size_t axis, float init_v,
             int src_idx_base1 = src_idx_base0 + redu_idx * n_lower;
             for (int l_idx = 0; l_idx < n_lower; l_idx++) {
                 // Reduce
-                float r = ((float[]) ret_data.data)[ret_idx_base + l_idx];
-                float s = ((float[]) src_data.data)[src_idx_base1 + l_idx];
+                float r = ret_data[ret_idx_base + l_idx];
+                float s = src_data[src_idx_base1 + l_idx];
                 r = reduce_op(r, s);
-                ((float[]) ret_data.data)[ret_idx_base + l_idx] = r;
+                ret_data[ret_idx_base + l_idx] = r;
             }
         }
     };
@@ -179,7 +179,7 @@ Mu.Array ReduceAxis(Mu.Array src, int[] axes_raw, bool keepdims,
                    float init_v, F reduce_op) {
     if (axes_raw.length == 0) {
         // No int[] -> Reduce all
-        float ret_v = ReduceAxisAll(src.bytes, Mu.shape_length(src.shape), init_v, reduce_op);
+        float ret_v = ReduceAxisAll(((float[]) src.bytes.data)[src.start:], Mu.shape_length(src.shape), init_v, reduce_op);
         Mu.Array ret = Mu.scalar(ret_v);
         // Reshape for keepdims
         if (keepdims) {

@@ -1,5 +1,9 @@
 project('libmu', 'vala', 'c')
 
+if get_option('buildtype') == 'custom'
+  add_project_arguments('-g',  language : 'c')
+endif
+
 lib = library('mu',
 	version: '0.0.1',
 	sources: [
@@ -12,6 +16,8 @@ lib = library('mu',
 		'src/tinyndarray/broadcast.vala',
 		'src/tinyndarray/reduce.vala',
 		'src/tinyndarray/parallel.vala',
+		'src/tinyndarray/dot.vala',
+		'src/tinyndarray/concat.vala',
 	],
 	dependencies: [
 		dependency('glib-2.0'),
