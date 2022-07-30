@@ -2,8 +2,10 @@ namespace Mu
 {
 	/* Equality */
 	public bool eq(Array a, Array b)
-	requires(a.dtype == b.dtype)
 	{
+		if (a.dtype != b.dtype)
+			return false;
+
 		if (!shape_eq(a.shape, b.shape))
 			return false;
 		

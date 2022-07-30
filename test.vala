@@ -1,7 +1,7 @@
 void main()
 {
-	// test_array();
-	test_ops();
+	test_array();
+	//  test_ops();
 	//  test_math();
 }
 
@@ -33,8 +33,7 @@ void test_array()
 
 	// Test iteration
 	{
-		float[] a_data = {1,2,3, 4,5,6, 7,8,9, 10,11,12};
-		var a = Mu.Array.from(a_data, {2,2,3});
+		var a = Mu.array({1,2,3, 4,5,6, 7,8,9, 10,11,12}, {2,2,3});
 
 		int i = 0;
 		a.foreach((val, idx) => {
@@ -45,6 +44,19 @@ void test_array()
 
 		message(@"\n$a");
 		assert(i == 4);
+	}
+
+	// Deep slicing
+	{
+		var arr = Mu.arange(1, 13).reshape({3, 4});
+		
+		//  var shallow = arr[1:2][1:3];	// breaks
+		//  print(@"$shallow\n");
+
+		var deep = arr.deep_slice({{1,3}, {1,3}});
+		print(@"$deep\n");
+
+		assert(Mu.eq(deep, Mu.array({6f, 7f, 10f, 11f}, {2,2})));
 	}
 }
 

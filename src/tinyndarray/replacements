@@ -19,7 +19,7 @@ int[]
 \.push_back
  += 
 
-std::vector<int> (\w+)\((\w+)\)
+std::vector<int>&? (\w+)\((\w+)\)
 int[] $1 = new int[$2]
 
 static_cast<(\w+)>
@@ -32,7 +32,7 @@ int[]
 internal
 
 NdArray::(Const)?Iter&?
-ByteArray
+float[]
 
 (\w)NdArray&?
 $1Mu.Array

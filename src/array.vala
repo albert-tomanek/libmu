@@ -16,26 +16,6 @@ namespace Mu
 		}
 	}
 
-	public bool _eq(Array a, Array b)	// Undercore because it's not equivalent to numpy `equal` but we desparately need it for debug etc.
-	{
-		if (!shape_eq(a.shape, b.shape))
-			return false;
-		if (a.dtype != b.dtype)
-			return false;
-
-		return Memory.cmp(
-			((uint8 *) a.bytes.data) + (a.start * dtype_size(a.dtype)),
-			((uint8 *) b.bytes.data) + (b.start * dtype_size(a.dtype)),
-			shape_length(a.shape)*dtype_size(a.dtype)
-		) == 0;
-	}
-
-	public Array scalar(float val)
-	{
-		float[] data = {val};
-		return Array.from((owned) data, {1}, true);
-	}
-
 	public class Array
 	{
 		public int[] shape { get; internal set; }
@@ -48,7 +28,7 @@ namespace Mu
 		internal ByteArray bytes;
 		internal int start;
 
-		internal Array(int[] shape, DType dtype)
+		internal Array.unalloc(int[] shape, DType dtype)
 		{
 			// This constructor is for when you allocate your own data later on. If you need an already allocated array to output to, use Mu.zeros()
 
@@ -75,7 +55,7 @@ namespace Mu
 		public static Array from(void *data, int[] shape, bool steal = false, DType dtype = DType.FLOAT32)
 		{
 			// Create a new array using a copy of `data`.
-			var arr = new Array(shape, dtype);
+			var arr = new Array.unalloc(shape, dtype);
 
 			if (steal)
 			{
@@ -96,7 +76,7 @@ namespace Mu
 
 		public Array copy()
 		{
-			Array ret = new Array(this.shape, this.dtype);
+			Array ret = new Array.unalloc(this.shape, this.dtype);
 			
 			ret.bytes.set_size(shape_length(this.shape) * dtype_size(this.dtype));
 			Memory.copy(ret.bytes.data, (void *) this.bytes.data[this.start * dtype_size(this.dtype)], ret.bytes.len);	// If this.start is nonzero, this will only copy the subset of the data that is used by this array.
@@ -156,23 +136,6 @@ namespace Mu
 			return this.get_i(indices);
 		}
 
-		static int[] _parse_indices(int idx0, va_list rest)
-		{
-			/* List indices are passed as an int and a va_list (because of how C works).
-			 * This function converts them into an int[].									*/
-
-			int[] arr = {};
-			arr += idx0;
-
-			while (true) {
-				int idx = rest.arg();
-				if (idx == int.MIN) break;	// You need to set the `sentinel` ccode so that Vala knows how to terminate the arg list properly.
-				arr += idx;
-			}
-
-			return arr;
-		}
-
 		public Array get_i(int[] indices)
 		{
 			if (indices.length > this.shape.length)
@@ -198,8 +161,7 @@ namespace Mu
 			return new Array.with_bytes(this.bytes, start, this.shape[indices.length:], this.dtype);
 		}
 
-		public long length { get { return this.shape[0]; } }	// This is necessary for the slice semantics of `array[3:]`
-		
+		public long length { get { return this.shape[0]; } }	// Vala requires this to be able to leave out the end idx in `array[3:]`
 		public Array slice(long start, long end)
 		{
 			if (start < -this.shape[0] || start > this.shape[0] ||
@@ -222,6 +184,14 @@ namespace Mu
 			shape[0] = (int) (end - start + 1);
 
 			return new Array.with_bytes(this.bytes, shape_length(before_start), shape, this.dtype);
+		}
+		
+		public Array deep_slice(int[,] indices)	// NOTE: Unlike in numpy, this creates a copy of the data.
+		{
+			if (indices.length[1] != 2)
+				error("Slicing requires pairs of indices, but provided array has shape {%d, %d}. (must end in 2)", indices.length[0], indices.length[1]);
+			
+			return MakeSlice(this, indices);
 		}
 
 		/* Iteration */
@@ -331,19 +301,25 @@ namespace Mu
 
 	}
 
-	internal void copy_items(Array dst, int dst_index, Array src, int src_index, int n_items)
-	requires(dst.dtype == src.dtype)
+	/* Creation */
+
+	public Array scalar(float val)
 	{
-		Memory.copy(
-			((uint8 *) dst.bytes.data) + (dst_index * dtype_size(src.dtype)),
-			((uint8 *) src.bytes.data) + (src_index * dtype_size(src.dtype)),
-			n_items * dtype_size(src.dtype)
-		);
+		float[] data = {val};
+		return Array.from((owned) data, {1}, true);
+	}
+	
+	public Array array(float[] data, int[] shape)
+	{
+		if (shape_length(shape) != data.length)
+			error("Shape %s doesn't account for all %d elements of array provided.", print_shape(shape), data.length);
+
+		return Array.from(data, shape, false);
 	}
 
 	public Array zeros(int[] shape, DType dtype = DType.FLOAT32)
 	{
-		var arr = new Array(shape, dtype);
+		var arr = new Array.unalloc(shape, dtype);
 		arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
 
 		for (int i = 0; i < shape_length(shape); i++)
@@ -356,7 +332,7 @@ namespace Mu
 
 	public Array ones(int[] shape, DType dtype = DType.FLOAT32)
 	{
-		var arr = new Array(shape, dtype);
+		var arr = new Array.unalloc(shape, dtype);
 		arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
 
 		for (int i = 0; i < shape_length(shape); i++)
@@ -367,45 +343,30 @@ namespace Mu
 		return arr;
 	}
 
-	public Array expand_dims(Array a, int axis)
+	internal void copy_items(Array dst, int dst_index, Array src, int src_index, int n_items)
+	requires(dst.dtype == src.dtype)
 	{
-		if (axis < -a.shape.length || axis > a.shape.length)
-			error("Axis %d is out of bounds for array of shape %s.", axis, print_shape(a.shape));
-
-		if (axis < 0)
-			axis += a.shape.length;
-
-		int[] new_shape = new int[a.shape.length + 1];
-
-		for (int i = 0; i < new_shape.length; i++)
-		{
-			if (i < axis)
-				new_shape[i] = a.shape[i];
-			else if (i == axis)
-				new_shape[i] = 1;
-			else
-				new_shape[i] = a.shape[i - 1];
-		}
-
-		a.shape = new_shape;
-
-		return a;
+		Memory.copy(
+			((uint8 *) dst.bytes.data) + (dst_index * dtype_size(src.dtype)),
+			((uint8 *) src.bytes.data) + (src_index * dtype_size(src.dtype)),
+			n_items * dtype_size(src.dtype)
+		);
 	}
 
-	public Array squeeze(Array a)
+	private int[] _parse_indices(int idx0, va_list rest)
 	{
-		int[] new_shape = {};
+		/* List indices are passed as an int and a va_list (because of how C works).
+		 * This function converts them into an int[].									*/
 
-		foreach (int dim in a.shape)
-		{
-			if (dim == 1)
-				continue;
-			else
-				new_shape += dim;
+		int[] arr = {};
+		arr += idx0;
+
+		while (true) {
+			int idx = rest.arg();
+			if (idx == int.MIN) break;	// You need to set the `sentinel` ccode so that Vala knows how to terminate the arg list properly.
+			arr += idx;
 		}
 
-		a.shape = new_shape;
-
-		return a;
+		return arr;
 	}
 }
