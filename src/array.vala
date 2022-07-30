@@ -101,13 +101,20 @@ namespace Mu
 			}
 			set {
 				if (shape_length(this.shape) != 1)
-				{
-					error("You may only set the literal value of an array with shape {1}. This array has shape %s.", print_shape(this.shape));
-				}
-				else
-				{
-					((float[]) this.bytes.data)[this.start + 0] = value;
-				}
+					error("You may only set the scalar value of an array with shape {1}. This array has shape %s.", print_shape(this.shape));
+
+				((float[]) this.bytes.data)[this.start + 0] = value;
+			}
+		}
+
+		public float[] values {
+			get {
+				if (this.shape.length != 1)
+					error("You may only get a Vala array from a 1-dimensional Mu.Array. This array has %d dimensions.", this.shape.length);
+				
+				var @out = new float[this.shape[0]];
+				Memory.copy(@out, (void *) (((float[]) this.bytes.data)[this.start:]), this.shape[0] * dtype_size(this.dtype));
+				return @out;
 			}
 		}
 
@@ -245,11 +252,33 @@ namespace Mu
 
 		/* Mutating arrays */
 
-		public Array reshape(int[] new_shape)
+		public Array reshape(int[] _new_shape)
 		{
-			if (shape_length(this.shape) != shape_length(new_shape))
-			{
-				error("Cannot reshape array of shape %s into shape %s.", print_shape(this.shape), print_shape(new_shape));
+			int[] new_shape = _new_shape.copy();
+
+			// Check shape validity
+			int unknown_idx = shape.length;
+			int size = 1;
+			for (int i = 0; i < shape.length; i++) {
+				if (shape[i] < 0) {
+					if (unknown_idx != shape.length) {
+						error("Cannot reshape array with multiple unknown dimensions (into %s).", print_shape(new_shape));
+					} else {
+						unknown_idx = i;
+					}
+				} else {
+					size *= shape[i];
+				}
+			}
+
+			if (unknown_idx == shape.length) {	// No unknown dims
+				if (shape_length(this.shape) != shape_length(new_shape))
+					error("Cannot reshape array of shape %s into shape %s.", print_shape(this.shape), print_shape(new_shape));
+			} else {
+				if (shape_length(this.shape) % size != 0)
+					error("Cannot reshape array of shape %s into shape %s. (non-zero remainder: %d)", print_shape(this.shape), print_shape(new_shape), shape_length(this.shape) % size);
+				
+				new_shape[unknown_idx] = shape_length(this.shape) / size;
 			}
 
 			return new Array.with_bytes(this.bytes, this.start, new_shape, this.dtype);
