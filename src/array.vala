@@ -33,10 +33,10 @@ namespace Mu
 	public Array scalar(float val)
 	{
 		float[] data = {val};
-		return Array.from(data, {1});
+		return Array.from((owned) data, {1}, true);
 	}
 
-	public class Array : Object
+	public class Array
 	{
 		public int[] shape { get; internal set; }
 		public DType dtype { get; internal set; }
@@ -72,14 +72,22 @@ namespace Mu
 
 		/* Factory methods */
 
-		public static Array from(void *data, int[] shape, DType dtype = DType.FLOAT32)
+		public static Array from(void *data, int[] shape, bool steal = false, DType dtype = DType.FLOAT32)
 		{
 			// Create a new array using a copy of `data`.
 			var arr = new Array(shape, dtype);
 
-			size_t size = shape_length(shape) * dtype_size(dtype);
-			arr.bytes.set_size((uint) size);
-			Memory.copy(arr.bytes.data, data, size);
+			if (steal)
+			{
+				arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));
+				arr.bytes = new ByteArray.take((uint8[]) data);
+			}
+			else
+			{
+				size_t size = shape_length(shape) * dtype_size(dtype);
+				arr.bytes.set_size((uint) size);
+				Memory.copy(arr.bytes.data, data, size);
+			}
 
 			return arr;
 		}

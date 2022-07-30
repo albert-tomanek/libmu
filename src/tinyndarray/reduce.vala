@@ -197,7 +197,7 @@ Mu.Array ReduceAxis(Mu.Array src, int[] axes_raw, bool keepdims,
         int[] ret_shape_pad = CheckReductable(src_shape, axes, keepdims);
 
         // Reduce axes one by one
-        Mu.Array ret = src;
+        Mu.Array ret = src.copy();
         for (size_t i = 0; i < axes.length; i++) {
             // From back
             size_t axis = (size_t) axes[axes.length - i - 1];

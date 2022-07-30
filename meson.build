@@ -1,10 +1,8 @@
 project('libmu', 'vala', 'c')
 
-if get_option('buildtype') == 'custom'
-  add_project_arguments('-g',  language : 'c')
-endif
+#add_project_arguments('-g',  language : 'c')
 
-lib = library('mu',
+lib = static_library('mu',
 	version: '0.0.1',
 	sources: [
 		'src/array.vala',

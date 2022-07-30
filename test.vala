@@ -55,7 +55,7 @@ void test_ops()
 		var a = Mu.arange(1, 7);
 		a = a.reshape({2, 3});
 
-		var rep = Mu.repeat(a, 2, 0);
+		var rep = Mu.repeat(a, 2, 1);
 		print(@"$rep\n");
 	}
 
@@ -64,7 +64,7 @@ void test_ops()
 		float[] data = {1,2, 3,4, 5,6};
 		var a = Mu.Array.from(data, {3,2});
 
-		var conc = Mu.concatenate({a[:1], Mu.expand_dims(a[2], 0)}, 1);
+		var conc = Mu.concatenate({a[:1], Mu.expand_dims(a[2], 0)}, 0);
 		print(@"$conc\n");
 
 		assert(Mu.eq(conc, a));

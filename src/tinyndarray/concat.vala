@@ -1,7 +1,7 @@
 internal void CheckConcatenatable(Mu.Array[] xs, int axis) {
     // Check empty
     if (xs.length == 0) {
-        error("No arrays were passed to Mu.concatenate.");
+        error("No arrays were passed for concatenation.");
 
     }
     // Check same shape except axis dimension
@@ -16,7 +16,7 @@ internal void CheckConcatenatable(Mu.Array[] xs, int axis) {
         }
         // Check the size of shapes
         if (fst_shape.length != cur_shape.length) {
-            error("Array shapes are incompatible for concatenation. %s != %s",
+            error("Array shapes %s and %s are of differing dimentionalities and are hence incompatible for concatenation.",
                 Mu.print_shape(cur_shape),
                 Mu.print_shape(fst_shape));
         }
@@ -54,7 +54,7 @@ internal void ComputeConcatSizes(
     }
     // Lower size depends on each sources
     int[] _n_lowers = {};
-    foreach (Mu.Array x in xs) {
+    foreach (unowned Mu.Array x in xs) {
         _n_lowers += ((int)(Mu.shape_length(x.shape)) / n_upper);
     }
     // Result indices of concatenation
@@ -70,7 +70,7 @@ internal void ComputeConcatSizes(
     // Concatenating dimensions
     int concat_dim = 0;
     size_t axis_l = (size_t)(axis);
-    foreach (Mu.Array x in xs) {
+    foreach (unowned Mu.Array x in xs) {
         concat_dim += x.shape[axis_l];
     }
 

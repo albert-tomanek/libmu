@@ -1,18 +1,11 @@
 A GLib-based library that tries to emulate Python's `numpy`.
-Not MT-safe.
 The aim here isn't to be as efficient as possible, it's to emulate the usage of Numpy as closely as possible.
 
-### Why's it called *Mu*?
+Most of the code for array operations was taken & translated from the C++ project [tinyndarray](https://github.com/takiyu/tinyndarray/). `libmu` won't be considered ABI-complete until all of the functions from `tinyndarray` are translated, and so for now the build script creates a static library (`.a` not `.so`) to be compiled into each binary that uses it.
 
-So here's my thought flow:
+### Why's it called _Mu_?
+
+So this was my thought flow:
 
 Numpy? Maths. Maths? Greek letters! Hmm, which one is cool, typable, and hasn't been used yet... Mu!
 
-### Note
-
-This library will probably never be feature-complete.
-Theoretically it wouldn't be hard to adapt a [C# numpy implementaiton like this one](https://github.com/Quansight-Labs/numpy.net) except that it uses C#-specific features like funciton overloading and partial classes.
-
----
-
-A lot of code was ~~stolen~~ translated from [tinyndarray](https://github.com/takiyu/tinyndarray/)
