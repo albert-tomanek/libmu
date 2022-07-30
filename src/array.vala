@@ -309,12 +309,14 @@ namespace Mu
 		return Array.from((owned) data, {1}, true);
 	}
 	
-	public Array array(float[] data, int[] shape)
+	public Array array(float[] data, int[]? shape = null)
 	{
-		if (shape_length(shape) != data.length)
+		int[] shape_ = shape ?? new int[] { data.length };
+
+		if (shape_length(shape_) != data.length)
 			error("Shape %s doesn't account for all %d elements of array provided.", print_shape(shape), data.length);
 
-		return Array.from(data, shape, false);
+		return Array.from(data, shape_, false);
 	}
 
 	public Array zeros(int[] shape, DType dtype = DType.FLOAT32)
