@@ -1,6 +1,6 @@
 namespace Mu.Utils
 {
-    uint8[] to_rgb(Array arr)
+    public uint8[] to_rgb(Array arr)
     requires(arr.shape.length == 3)
     {
         uint8[] data = new uint8[shape_length(arr.shape)];
@@ -11,7 +11,7 @@ namespace Mu.Utils
         return data;
     }
 
-    Array from_rgb(uint8[] data, int width, int height)
+    public Array from_rgb(uint8[] data, int width, int height)
     {
         var arr = Mu.zeros({height, width, 3});
 
