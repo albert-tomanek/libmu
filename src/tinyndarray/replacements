@@ -34,7 +34,7 @@ internal
 NdArray::(Const)?Iter&?
 float[]
 
-(\w)NdArray&?
+(\W)NdArray&?
 $1Mu.Array
 
 auto&?&?

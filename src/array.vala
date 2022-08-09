@@ -79,7 +79,7 @@ namespace Mu
 			Array ret = new Array.unalloc(this.shape, this.dtype);
 			
 			ret.bytes.set_size(shape_length(this.shape) * dtype_size(this.dtype));
-			Memory.copy(ret.bytes.data, (void *) this.bytes.data[this.start * dtype_size(this.dtype)], ret.bytes.len);	// If this.start is nonzero, this will only copy the subset of the data that is used by this array.
+			Memory.copy(ret.bytes.data, (void *) this.bytes.data[this.start * dtype_size(this.dtype):], ret.bytes.len);	// If this.start is nonzero, this will only copy the subset of the data that is used by this array.
 			
 			return ret;
 		}
@@ -107,15 +107,30 @@ namespace Mu
 			}
 		}
 
-		public float[] values {
-			get {
-				if (this.shape.length != 1)
-					error("You may only get a Vala array from a 1-dimensional Mu.Array. This array has %d dimensions.", this.shape.length);
-				
-				var @out = new float[this.shape[0]];
-				Memory.copy(@out, (void *) (((float[]) this.bytes.data)[this.start:]), this.shape[0] * dtype_size(this.dtype));
-				return @out;
-			}
+		public float[] values()
+		{
+			if (this.shape.length != 1)
+				error("You may only get a Vala array from a 1-dimensional Mu.Array. This array has %d dimensions.", this.shape.length);
+			
+			var @out = new float[this.shape[0]];
+			Memory.copy(@out, (void *) (((float[]) this.bytes.data)[this.start:]), this.shape[0] * dtype_size(this.dtype));
+			return (owned) @out;
+		}
+
+		//  public ByteArray release()
+		//  {
+		//  	this.shape = {};
+		//  	this.start = 0;
+
+		//  	var ret = this.bytes;
+		//  	this.bytes = new ByteArray();
+
+		//  	return ret;
+		//  }
+
+		public unowned uint8[] get_bytes()
+		{
+			return (uint8[]) ((float[]) this.bytes.data)[start:start + shape_length(this.shape) * dtype_size(this.dtype)];
 		}
 
 		public new void set(Array that)
@@ -257,21 +272,21 @@ namespace Mu
 			int[] new_shape = _new_shape.copy();
 
 			// Check shape validity
-			int unknown_idx = shape.length;
+			int unknown_idx = -1;
 			int size = 1;
-			for (int i = 0; i < shape.length; i++) {
-				if (shape[i] < 0) {
-					if (unknown_idx != shape.length) {
+			for (int i = 0; i < new_shape.length; i++) {
+				if (new_shape[i] == -1) {
+					if (unknown_idx != -1) {
 						error("Cannot reshape array with multiple unknown dimensions (into %s).", print_shape(new_shape));
 					} else {
 						unknown_idx = i;
 					}
 				} else {
-					size *= shape[i];
+					size *= new_shape[i];
 				}
 			}
-
-			if (unknown_idx == shape.length) {	// No unknown dims
+			
+			if (unknown_idx == -1) {	// No unknown dims
 				if (shape_length(this.shape) != shape_length(new_shape))
 					error("Cannot reshape array of shape %s into shape %s.", print_shape(this.shape), print_shape(new_shape));
 			} else {
@@ -335,7 +350,7 @@ namespace Mu
 	public Array scalar(float val)
 	{
 		float[] data = {val};
-		return Array.from((owned) data, {1}, true);
+		return Array.from((owned) data, {1}, false);
 	}
 	
 	public Array array(float[] data, int[]? shape = null)
@@ -353,10 +368,10 @@ namespace Mu
 		var arr = new Array.unalloc(shape, dtype);
 		arr.bytes.set_size(shape_length(shape) * dtype_size(dtype));	// Should set the 'length' as well.
 
-		for (int i = 0; i < shape_length(shape); i++)
-		{
-			((float[]) arr.bytes.data)[i] = 0.0f;
-		}
+		//  for (int i = 0; i < shape_length(shape); i++)
+		//  {
+		//  	((float[]) arr.bytes.data)[i] = 0.0f;
+		//  }
 
 		return arr;
 	}

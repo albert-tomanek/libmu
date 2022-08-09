@@ -189,9 +189,9 @@ void ApplyOpBroadcast(Mu.Array ret, Mu.Array lhs, Mu.Array rhs,
         r_steps += (r_step);
     }
 
-#if 0  // Run in parallel
-    RunParallel(ret_shape[0], [&](int i) {
-        int ret_size = static_cast<int>(ret.length) / ret_shape[0];
+#if 1  // Run in parallel
+    RunParallel(ret_shape[0], (i) => {
+        int ret_size = Mu.shape_length(ret.shape) / ret_shape[0];
         ApplyOpBroadcastImpl(ret.data() + ret_child_sizes[0] * i,
                              lhs.data() + l_steps[0] * i,
                              rhs.data() + r_steps[0] * i, ret_shape, ret_size,

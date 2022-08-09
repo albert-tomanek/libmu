@@ -164,7 +164,7 @@ Mu.Array ReduceAxisOne(Mu.Array src, size_t axis, float init_v,
 
     // TODO: Run parallel for `axis == 0` (means `n_upper == 1`)
 
-#if 0  // Run in parallel
+#if 1  // Run in parallel
     RunParallel(n_upper, reduce);
 #else  // Run sequentially
     for (int u_idx = 0; u_idx < n_upper; u_idx++) {

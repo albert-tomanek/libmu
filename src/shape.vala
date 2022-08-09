@@ -11,6 +11,20 @@ namespace Mu
 		}
 	}
 
+	public int shape_length(int[] shape)
+	{
+		if (shape.length == 0) return 1;
+
+		int n = 1;
+
+		foreach (int dim in shape)
+		{
+			n *= dim;
+		}
+
+		return n;
+	}
+
 	public bool shape_eq(int[] shape_a, int[] shape_b)
 	{
 		if (shape_a.length != shape_b.length) return false;
@@ -24,18 +38,20 @@ namespace Mu
 		return true;
 	}
 
-	public int shape_length(int[] shape)
+	public bool shape_matches(int[] shape_a, int[] shape_b)
 	{
-		if (shape.length == 0) return 1;
+		// Allows you to compare a shape against a wildcard
+		// like: shape_matches({48, 12, 12}, {-1, 12, 12})
 
-		int n = 1;
+		if (shape_a.length != shape_b.length) return false;
 
-		foreach (int dim in shape)
+		for (int i = 0; i < shape_a.length; i++)
 		{
-			n *= dim;
+			if (shape_a[i] != shape_b[i] && (shape_a[i] != -1 || shape_b[i] != -1))
+				return false;
 		}
 
-		return n;
+		return true;
 	}
 
 	public string print_shape(int[] shape)

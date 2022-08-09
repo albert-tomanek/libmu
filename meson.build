@@ -10,6 +10,7 @@ lib = static_library('mu',
 		'src/index.vala',
 		'src/ops.vala',
 		'src/ops_math.vala',
+		'src/utils.vala',
 
 		'src/tinyndarray/slice.vala',
 		'src/tinyndarray/broadcast.vala',
